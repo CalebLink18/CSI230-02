@@ -1,0 +1,11 @@
+cd ..\..\..\..\..
+
+$temp = Get-Process | Where-Object {$_.name -eq "chrome.exe"} -ErrorAction SilentlyContinue
+
+if ($temp) {
+Stop-Process -Name "chrome.exe"
+} else {
+Start-process C:\Program Files\Google\Chrome\Application
+}
+
+#it doesn't have access to program files
