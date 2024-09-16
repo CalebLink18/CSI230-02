@@ -1,0 +1,62 @@
+#still cant save files so its all here
+
+function getStart/StopEvents($days){
+
+$loginouts = Get-EventLog System -Source EventLog -After(Get-Date).AddDays($days)
+
+$loginoutsTable = @()
+
+for($i=0; $i -lt $loginouts.Count; $i++){
+    
+    $event = ""
+    if($loginouts[$i].EventID -ne 6005 -and $loginouts[$i].EventID -ne 6006 ){continue}
+    if($loginouts[$i].EventID -eq 6005){$event="start"}
+    if($loginouts[$i].EventID -eq 6006){$event="stop"}
+
+    $loginoutsTable += [pscustomobject] @{"Time" = $loginouts.TimeGenerated[$i]; `
+                                          "ID"   = $loginouts.EventID[$i]; `
+                                          "Event"= $event; `
+                                          "User" = "SYSTEM";
+                                         }
+}
+
+$loginoutsTable
+
+}
+
+
+
+
+function getLogon/outEvents($days){
+
+$loginouts = Get-EventLog System -Source Microsoft-Windows-Winlogon -After(Get-Date).AddDays($days)
+
+$loginoutsTable = @()
+
+for($i=0; $i -lt $loginouts.Count; $i++){
+    
+    $event = ""
+    if($loginouts[$i].InstanceId -eq 7001){$event="logon"}
+    if($loginouts[$i].InstanceId -eq 7002){$event="logout"}
+
+    $user = $loginouts[$i].ReplacementStrings[1]
+    $user2 = New-Object System.Security.Principal.SecurityIdentifier ` ($user) 
+    $user3 = $user2.Translate([System.Security.Principal.NTAccount])
+
+    $loginoutsTable += [pscustomobject] @{"Time" = $loginouts.TimeGenerated[$i]; `
+                                          "ID"   = $loginouts.EventID[$i]; `
+                                          "Event"= $event; `
+                                          "User" = $user3;
+                                         }
+}
+
+$loginoutsTable
+}
+
+
+
+$Table = getLogon/outEvents(15)
+
+$Table2 = getStart/StopEvents(25)
+
+$Table3 = getStart/StopEvents(25)
